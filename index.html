@@ -41,7 +41,8 @@
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html{-webkit-text-size-adjust:100%}
 body{font-family:var(--sans);font-size:16px;line-height:1.5;color:var(--ameixa);background:var(--off);-webkit-font-smoothing:antialiased;min-height:100vh}
-body.travado{overflow:hidden}
+/* trava de rolagem que não faz a página pular para o topo no iPhone */
+body.travado{position:fixed;left:0;right:0;width:100%;overflow:hidden}
 button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 input{font:inherit;color:inherit}
 /* C2: um único estilo de foco em todos os controles */
@@ -165,7 +166,7 @@ mark{background:var(--suave);color:inherit;border-radius:3px;padding:0 1px}
 .rodape{margin-top:30px;font-size:14px;line-height:1.55;color:var(--ameixa-70);text-align:center;padding:0 8px}
 
 /* ── PAINEL DE RESULTADO ── */
-.veu{position:fixed;inset:0;z-index:40;background:rgba(56,38,48,.42);opacity:0;pointer-events:none;transition:opacity .25s}
+.veu{position:fixed;left:0;right:0;top:-120px;bottom:-120px;z-index:40;background:rgba(56,38,48,.42);opacity:0;pointer-events:none;transition:opacity .25s}
 .veu.on{opacity:1;pointer-events:auto}
 .folha{position:fixed;left:0;right:0;bottom:0;z-index:41;max-height:calc(100dvh - 32px - var(--st));display:flex;flex-direction:column;background:var(--branco);border-radius:var(--r-lg) var(--r-lg) 0 0;box-shadow:var(--sombra);transform:translateY(105%);transition:transform .34s var(--ease);visibility:hidden}
 .folha.on{transform:none;visibility:visible}
@@ -705,10 +706,25 @@ function anunciarResultado(){
     $('anuncio').textContent=`${br(p.n)} ${p.u} por dose para ${br(peso)} kg${foraDaFaixa(peso)?', peso fora da faixa':''}.`;
   },500);
 }
+/* guarda a rolagem ao abrir o painel e devolve ao fechar (Safari/iPhone) */
+let rolagem=0;
+const $tema=document.querySelector('meta[name="theme-color"]');
+function travar(){
+  rolagem=window.scrollY;
+  document.body.style.top=`-${rolagem}px`;
+  document.body.classList.add('travado');
+  if($tema) $tema.setAttribute('content','#ABA1A4'); /* off-white sob o véu */
+}
+function destravar(){
+  document.body.classList.remove('travado');
+  document.body.style.top='';
+  window.scrollTo(0,rolagem);
+  if($tema) $tema.setAttribute('content','#FFFAF8');
+}
 function abrir(id){
   aberto=id; renderFolha();
   $veu.classList.add('on'); $folha.classList.add('on');
-  document.body.classList.add('travado'); $app.inert=true; $('barra').inert=true;
+  travar(); $app.inert=true; $('barra').inert=true;
   history.pushState({folha:id},'');
   setTimeout(()=>{ const f=$folha.querySelector('[data-fechar]'); f&&f.focus({preventScroll:true}); },60);
 }
@@ -716,7 +732,7 @@ function fecharUI(){
   if(!aberto) return;
   const id=aberto; aberto=null;
   $veu.classList.remove('on'); $folha.classList.remove('on');
-  document.body.classList.remove('travado'); $app.inert=false; $('barra').inert=false;
+  destravar(); $app.inert=false; $('barra').inert=false;
   const r=document.querySelector(`.item[data-med="${id}"]`); r&&r.focus({preventScroll:true});
 }
 function fechar(){ if(history.state&&history.state.folha) history.back(); else fecharUI(); }

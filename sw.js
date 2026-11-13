@@ -1,5 +1,5 @@
 /* Cache offline da calculadora. Ao publicar mudanças, aumente a versão. */
-const VERSAO = 'calc-giovana-v4';
+const VERSAO = 'calc-giovana-v5';
 const ARQUIVOS = ['./', './index.html', './manifest.webmanifest', './favicon.svg', './favicon-32.png',
   './apple-touch-icon.png', './icon-192.png', './icon-512.png', './icon-maskable-512.png'];
 
